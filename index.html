@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PatternLab — Analisis Pola S/O</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><div class="brand-mark">P</div><div><strong>PatternLab</strong><span>Analisis historis pola S/O</span></div></div>
+  <div class="top-actions"><button class="btn ghost" id="backupBtn">Cadangkan JSON</button><label class="btn primary file-btn">Impor CSV/JSON<input id="importFile" type="file" accept=".csv,.json,text/csv,application/json" hidden></label></div>
+</header>
+<main class="container">
+  <section class="hero">
+    <div><div class="eyebrow">WORKSPACE ANALISIS</div><h1>Dashboard Pola <span>S/O</span></h1><p>Kelola banyak grup, telusuri periode, bandingkan distribusi delapan pola, dan ekspor data kapan saja.</p></div>
+    <div class="hero-chip"><span class="pulse"></span><span id="storageStatus">Siap digunakan</span></div>
+  </section>
+  <div class="notice"><strong>Aturan klasifikasi:</strong> ambil tiga digit terakhir angka keluar, baca dari kiri ke kanan. <b>S</b> = genap (0, 2, 4, 6, 8), <b>O</b> = ganjil (1, 3, 5, 7, 9). Contoh: 1992 → 992 → OOS.</div>
+
+  <section class="toolbar panel">
+    <div class="field"><label for="groupSelect">Grup aktif</label><select id="groupSelect"></select></div>
+    <div class="field"><label for="newGroupName">Buat grup baru</label><input id="newGroupName" placeholder="Mis. Oktober 2026"></div>
+    <button class="btn primary" id="addGroupBtn">＋ Tambah grup</button>
+    <button class="btn" id="renameGroupBtn">Ubah nama grup</button>
+    <button class="btn danger-outline" id="deleteGroupBtn">Hapus grup</button>
+  </section>
+
+  <section class="metrics">
+    <article class="metric"><div class="metric-top"><span>Total periode</span><span class="metric-icon purple">▤</span></div><div class="metric-value" id="totalPeriods">0</div><div class="metric-sub" id="periodRange">Belum ada data</div></article>
+    <article class="metric"><div class="metric-top"><span>Pola paling sering</span><span class="metric-icon blue">↗</span></div><div class="metric-value" id="topPattern">—</div><div class="metric-sub" id="topPatternSub">Impor database untuk mulai</div></article>
+    <article class="metric"><div class="metric-top"><span>Pola paling jarang</span><span class="metric-icon orange">↘</span></div><div class="metric-value" id="lowPattern">—</div><div class="metric-sub" id="lowPatternSub">Menunggu data</div></article>
+    <article class="metric"><div class="metric-top"><span>Kelompok pola</span><span class="metric-icon green">◫</span></div><div class="metric-value">8</div><div class="metric-sub">Seluruh kombinasi S/O</div></article>
+  </section>
+
+  <section class="grid-2">
+    <article class="panel">
+      <div class="section-title"><div><div class="eyebrow">DISTRIBUSI</div><h2>Frekuensi setiap pola</h2></div><span class="subtle" id="chartSubtitle">Grup aktif</span></div>
+      <div id="frequencyChart" class="bars empty-state">Impor file CSV untuk menampilkan grafik.</div>
+    </article>
+    <article class="panel">
+      <div class="section-title"><div><div class="eyebrow">RINGKASAN</div><h2>Frekuensi & persentase</h2></div><button class="btn small" id="exportStatsBtn">Ekspor CSV</button></div>
+      <div class="table-wrap"><table><thead><tr><th>Pola</th><th>Jumlah</th><th>Persentase</th><th>Selisih dari rata-rata</th></tr></thead><tbody id="statsBody"><tr><td colspan="4" class="empty-cell">Belum ada data.</td></tr></tbody></table></div>
+    </article>
+  </section>
+
+  <section class="panel">
+    <div class="section-title wrap-mobile"><div><div class="eyebrow">DATA EXPLORER</div><h2>Database periode</h2><p class="section-desc">Filter data, cari angka tertentu, dan urutkan sesuai kebutuhan.</p></div><div class="actions"><button class="btn" id="exportDataBtn">Ekspor data terfilter</button><button class="btn" id="clearFiltersBtn">Reset filter</button></div></div>
+    <div class="filters">
+      <div class="field search-field"><label for="searchInput">Pencarian</label><input id="searchInput" placeholder="Cari periode, angka, atau pola…"></div>
+      <div class="field"><label for="patternFilter">Pola</label><select id="patternFilter"><option value="">Semua pola</option></select></div>
+      <div class="field"><label for="minPeriod">Periode minimum</label><input id="minPeriod" inputmode="numeric" placeholder="Mis. 1"></div>
+      <div class="field"><label for="maxPeriod">Periode maksimum</label><input id="maxPeriod" inputmode="numeric" placeholder="Mis. 1566"></div>
+      <div class="field"><label for="sortOrder">Urutan</label><select id="sortOrder"><option value="desc">Periode terbaru</option><option value="asc">Periode terlama</option><option value="pattern">Kelompokkan pola</option></select></div>
+    </div>
+    <div class="table-meta"><span id="rowCount">0 baris</span><span id="groupInfo">Pilih grup atau impor data.</span></div>
+    <div class="table-wrap data-table"><table><thead><tr><th>Periode</th><th>Angka keluar</th><th>3 digit terakhir</th><th>Pola</th><th>Status</th></tr></thead><tbody id="dataBody"><tr><td colspan="5" class="empty-cell">Belum ada data. Impor file CSV.</td></tr></tbody></table></div>
+    <div class="pagination"><span id="pageInfo">Halaman 0 dari 0</span><div><button class="btn small" id="prevPage">← Sebelumnya</button><button class="btn small" id="nextPage">Berikutnya →</button></div></div>
+  </section>
+
+  <section class="panel">
+    <div class="section-title"><div><div class="eyebrow">PERBANDINGAN</div><h2>Stabilitas per rentang periode</h2><p class="section-desc">Bagi data menjadi blok-blok berurutan untuk membandingkan distribusi pola dari waktu ke waktu.</p></div></div>
+    <div class="filters stability-controls"><div class="field"><label for="chunkSize">Ukuran setiap blok</label><select id="chunkSize"><option value="50">50 periode</option><option value="100" selected>100 periode</option><option value="157">Sekitar 157 periode</option><option value="250">250 periode</option><option value="500">500 periode</option></select></div><div class="field"><label for="stabilityPattern">Pola yang diamati</label><select id="stabilityPattern"></select></div></div>
+    <div class="table-wrap"><table><thead><tr><th>Blok</th><th>Rentang periode</th><th>Jumlah data</th><th>Jumlah pola</th><th>Persentase</th><th>Selisih dari total grup</th></tr></thead><tbody id="stabilityBody"><tr><td colspan="6" class="empty-cell">Impor data untuk menghitung stabilitas.</td></tr></tbody></table></div>
+  </section>
+
+  <section class="panel import-help">
+    <div class="section-title"><div><div class="eyebrow">PANDUAN DATA</div><h2>Format impor</h2></div></div>
+    <p>CSV sebaiknya memiliki kolom <code>Periode</code> dan <code>Angka Keluar</code>. Nama kolom tidak peka huruf besar/kecil. Contoh:</p>
+    <pre>Periode,Angka Keluar
+1,1992
+2,9364
+3,1691</pre>
+    <p>Jika ingin menambah data ke grup aktif, impor CSV saat grup tersebut dipilih. Periode yang sama akan diperbarui; periode baru akan ditambahkan. Gunakan <b>Cadangkan JSON</b> secara berkala untuk menyimpan semua grup.</p>
+  </section>
+  <footer>PatternLab · Analisis deskriptif historis. Frekuensi masa lalu bukan jaminan hasil periode berikutnya.</footer>
+</main>
+<script>
+const PATTERNS=['SSS','SSO','SOS','SOO','OSS','OSO','OOS','OOO'];
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n||0).toLocaleString('id-ID');
+let groups=[], activeId='', page=1, pageSize=25, filteredRows=[];
+const uid=()=>`g_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`;
+function classify(raw){const s=String(raw??'').replace(/\D/g,'');if(!s)return null;const last=s.slice(-3).padStart(3,'0');return {last3:last,pattern:[...last].map(c=>Number(c)%2===0?'S':'O').join('')};}
+function normalizeRow(period,result){const c=classify(result);if(!c||period===undefined||String(period).trim()==='')return null;return {period:String(period).trim(),result:String(result).trim(),last3:c.last3,pattern:c.pattern};}
+function active(){return groups.find(g=>g.id===activeId)||groups[0]||null;}
+function save(){try{localStorage.setItem('patternlab-data-v1',JSON.stringify({groups,activeId}));$('storageStatus').textContent='Tersimpan di browser';}catch(e){$('storageStatus').textContent='Penyimpanan browser penuh';}}
+function load(){try{const x=JSON.parse(localStorage.getItem('patternlab-data-v1')||'null');if(x&&Array.isArray(x.groups)){groups=x.groups;activeId=x.activeId||groups[0]?.id||'';}}catch(e){} if(!groups.length){groups=[{id:uid(),name:'Grup utama',rows:[]}];activeId=groups[0].id;} }
+function renderGroupSelect(){const old=activeId;$('groupSelect').innerHTML=groups.map(g=>`<option value="${esc(g.id)}">${esc(g.name)} · ${fmt(g.rows.length)} periode</option>`).join('');if(groups.some(g=>g.id===old))$('groupSelect').value=old;activeId=$('groupSelect').value;}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function stats(rows){const counts=Object.fromEntries(PATTERNS.map(p=>[p,0]));rows.forEach(r=>{if(counts[r.pattern]!==undefined)counts[r.pattern]++});return {counts,total:rows.length,avg:rows.length/8};}
+function renderStats(){const g=active(),rows=g?.rows||[],st=stats(rows),rank=PATTERNS.map(p=>({p,n:st.counts[p],pct:st.total?st.counts[p]/st.total*100:0})).sort((a,b)=>b.n-a.n||a.p.localeCompare(b.p));$('totalPeriods').textContent=fmt(rows.length);const nums=rows.map(r=>Number(r.period)).filter(Number.isFinite);$('periodRange').textContent=nums.length?`Periode ${fmt(Math.min(...nums))}–${fmt(Math.max(...nums))}`:'Belum ada data';$('topPattern').textContent=rows.length?rank[0].p:'—';$('topPatternSub').textContent=rows.length?`${fmt(rank[0].n)} kali · ${rank[0].pct.toFixed(2)}%`:'Impor database untuk mulai';$('lowPattern').textContent=rows.length?rank[rank.length-1].p:'—';$('lowPatternSub').textContent=rows.length?`${fmt(rank[rank.length-1].n)} kali · ${rank[rank.length-1].pct.toFixed(2)}%`:'Menunggu data';
+$('statsBody').innerHTML=rows.length?rank.map(x=>`<tr><td><span class="pattern-pill">${x.p}</span></td><td>${fmt(x.n)}</td><td>${x.pct.toFixed(2)}%</td><td class="${x.n-st.avg>=0?'positive':'negative'}">${x.n-st.avg>=0?'+':''}${(x.n-st.avg).toFixed(2)}</td></tr>`).join(''):'<tr><td colspan="4" class="empty-cell">Belum ada data.</td></tr>';
+$('frequencyChart').innerHTML=rows.length?rank.map(x=>`<div class="bar-row"><div class="bar-label"><span>${x.p}</span><b>${fmt(x.n)} <small>${x.pct.toFixed(2)}%</small></b></div><div class="bar-track"><span style="width:${x.pct?Math.max(1,x.pct/Math.max(...rank.map(a=>a.pct))*100):0}%"></span></div></div>`).join(''):'Impor file CSV untuk menampilkan grafik.';$('frequencyChart').classList.toggle('empty-state',!rows.length);$('chartSubtitle').textContent=g?.name||'Grup aktif';}
+function renderData(){const g=active(),rows=g?.rows||[],q=$('searchInput').value.toLowerCase().trim(),pat=$('patternFilter').value,min=$('minPeriod').value.trim(),max=$('maxPeriod').value.trim(),sort=$('sortOrder').value;filteredRows=rows.filter(r=>(!q||[r.period,r.result,r.last3,r.pattern].some(v=>String(v).toLowerCase().includes(q)))&&(!pat||r.pattern===pat)&&(min===''||Number(r.period)>=Number(min))&&(max===''||Number(r.period)<=Number(max)));if(sort==='asc')filteredRows.sort((a,b)=>Number(a.period)-Number(b.period));else if(sort==='pattern')filteredRows.sort((a,b)=>a.pattern.localeCompare(b.pattern)||Number(b.period)-Number(a.period));else filteredRows.sort((a,b)=>Number(b.period)-Number(a.period));const pages=Math.ceil(filteredRows.length/pageSize);page=Math.min(Math.max(1,page),Math.max(1,pages));const shown=filteredRows.slice((page-1)*pageSize,page*pageSize);$('dataBody').innerHTML=shown.length?shown.map(r=>`<tr><td>${esc(r.period)}</td><td class="num">${esc(r.result)}</td><td class="num">${esc(r.last3)}</td><td><span class="pattern-pill">${r.pattern}</span></td><td><span class="status-dot">Tervalidasi</span></td></tr>`).join(''):'<tr><td colspan="5" class="empty-cell">Tidak ada data yang cocok dengan filter.</td></tr>';$('rowCount').textContent=`${fmt(filteredRows.length)} hasil · ${fmt(rows.length)} total dalam grup`; $('groupInfo').textContent=g?g.name:'Tidak ada grup';$('pageInfo').textContent=`Halaman ${pages? page:0} dari ${pages}`;$('prevPage').disabled=page<=1;$('nextPage').disabled=page>=pages;}
+function renderStability(){const rows=active()?.rows||[],size=Number($('chunkSize').value),pat=$('stabilityPattern').value;const total=stats(rows),chunks=[];for(let i=0;i<rows.length;i+=size){const part=rows.slice(i,i+size),n=part.filter(r=>r.pattern===pat).length,pct=part.length?n/part.length*100:0,nums=part.map(r=>Number(r.period)).filter(Number.isFinite);chunks.push({i,part,n,pct,lo:nums.length?Math.min(...nums):'—',hi:nums.length?Math.max(...nums):'—'});} $('stabilityBody').innerHTML=chunks.length?chunks.map((c,j)=>`<tr><td>Blok ${j+1}</td><td>${c.lo}–${c.hi}</td><td>${fmt(c.part.length)}</td><td>${fmt(c.n)}</td><td>${c.pct.toFixed(2)}%</td><td class="${c.pct-(total.total?total.counts[pat]/total.total*100:0)>=0?'positive':'negative'}">${(c.pct-(total.total?total.counts[pat]/total.total*100:0)>=0?'+':'')+(c.pct-(total.total?total.counts[pat]/total.total*100:0)).toFixed(2)} poin</td></tr>`).join(''):'<tr><td colspan="6" class="empty-cell">Impor data untuk menghitung stabilitas.</td></tr>';}
+function render(){renderGroupSelect();renderStats();renderData();renderStability();save();}
+function parseCSV(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(l=>l.trim());if(!lines.length)return [];const parseLine=line=>{const out=[];let v='',quote=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'&&line[i+1]==='"'&&quote){v+='"';i++;}else if(c==='"')quote=!quote;else if(c===','&&!quote){out.push(v.trim());v='';}else v+=c;}out.push(v.trim());return out;};const head=parseLine(lines[0]).map(x=>x.toLowerCase().replace(/[\s_-]/g,''));let pi=head.findIndex(x=>['periode','period','no','nomor','draw'].includes(x)),ri=head.findIndex(x=>['angkak eluar'.replace(/\s/g,''),'angkakeluaran','hasil','result','angka','keluaran','nomorkeluar'].includes(x));if(pi<0)pi=0;if(ri<0)ri=1;const hasHeader=head.some(x=>['periode','period','angkakeluaran','hasil','result','keluaran'].includes(x));const data=hasHeader?lines.slice(1):lines;return data.map(line=>{const a=parseLine(line);return normalizeRow(a[pi]??a[0],a[ri]??a[1]);}).filter(Boolean);}
+function download(name,content,type='text/plain'){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url);}
+function csv(rows){const quote=v=>`"${String(v??'').replace(/"/g,'""')}"`;return [['Periode','Angka Keluar','Tiga Digit Terakhir','Pola'],...rows.map(r=>[r.period,r.result,r.last3,r.pattern])].map(r=>r.map(quote).join(',')).join('\r\n');}
+$('addGroupBtn').onclick=()=>{const name=$('newGroupName').value.trim();if(!name)return alert('Masukkan nama grup terlebih dahulu.');if(groups.some(g=>g.name.toLowerCase()===name.toLowerCase()))return alert('Nama grup sudah digunakan.');const g={id:uid(),name,rows:[]};groups.push(g);activeId=g.id;$('newGroupName').value='';page=1;render();};
+$('groupSelect').onchange=()=>{activeId=$('groupSelect').value;page=1;render();};
+$('renameGroupBtn').onclick=()=>{const g=active(),name=prompt('Nama baru untuk grup:',g?.name||'');if(g&&name?.trim()){g.name=name.trim();render();}};
+$('deleteGroupBtn').onclick=()=>{if(groups.length<=1)return alert('Minimal harus ada satu grup.');const g=active();if(g&&confirm(`Hapus grup "${g.name}" beserta ${g.rows.length} periodenya?`)){groups=groups.filter(x=>x.id!==g.id);activeId=groups[0].id;render();}};
+$('importFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const txt=await file.text();if(file.name.toLowerCase().endsWith('.json')){const obj=JSON.parse(txt);if(!obj.groups||!Array.isArray(obj.groups))throw Error('Format JSON cadangan tidak sesuai.');if(confirm('Ganti seluruh data saat ini dengan isi cadangan JSON?')){groups=obj.groups.map(g=>({id:g.id||uid(),name:g.name||'Grup impor',rows:(g.rows||[]).map(r=>normalizeRow(r.period,r.result)).filter(Boolean)}));activeId=obj.activeId||groups[0]?.id;render();alert('Cadangan berhasil dipulihkan.');}}else{const rows=parseCSV(txt);if(!rows.length)throw Error('Tidak ditemukan baris valid. Pastikan CSV punya kolom Periode dan Angka Keluar.');const g=active();const map=new Map(g.rows.map(r=>[r.period,r]));let added=0,updated=0;rows.forEach(r=>{if(map.has(r.period))updated++;else added++;map.set(r.period,r);});g.rows=[...map.values()].sort((a,b)=>Number(a.period)-Number(b.period));page=1;render();alert(`Impor selesai ke grup "${g.name}".\\nBaris baru: ${fmt(added)}\\nPeriode diperbarui: ${fmt(updated)}\\nTotal grup: ${fmt(g.rows.length)}`);}}catch(err){alert('Gagal mengimpor: '+err.message);}e.target.value='';};
+$('backupBtn').onclick=()=>download('patternlab-cadangan.json',JSON.stringify({version:1,exportedAt:new Date().toISOString(),activeId,groups},null,2),'application/json');
+$('exportDataBtn').onclick=()=>download('database-terfilter.csv',csv(filteredRows),'text/csv;charset=utf-8');
+$('exportStatsBtn').onclick=()=>{const rows=active()?.rows||[],st=stats(rows);download('ringkasan-frekuensi.csv',[['Pola','Jumlah','Persentase','Selisih dari rata-rata'],...PATTERNS.map(p=>[p,st.counts[p],(st.total?st.counts[p]/st.total*100:0).toFixed(2)+'%',(st.counts[p]-st.avg).toFixed(2)])].map(r=>r.join(',')).join('\r\n'),'text/csv;charset=utf-8');};
+$('searchInput').oninput=()=>{page=1;renderData();};['patternFilter','minPeriod','maxPeriod','sortOrder'].forEach(id=>$(id).addEventListener(id==='patternFilter'||id==='sortOrder'?'change':'input',()=>{page=1;renderData();}));
+$('clearFiltersBtn').onclick=()=>{$('searchInput').value='';$('patternFilter').value='';$('minPeriod').value='';$('maxPeriod').value='';$('sortOrder').value='desc';page=1;renderData();};
+$('prevPage').onclick=()=>{page--;renderData();};$('nextPage').onclick=()=>{page++;renderData();};$('chunkSize').onchange=renderStability;$('stabilityPattern').onchange=renderStability;
+$('patternFilter').innerHTML='<option value="">Semua pola</option>'+PATTERNS.map(p=>`<option>${p}</option>`).join('');$('stabilityPattern').innerHTML=PATTERNS.map(p=>`<option>${p}</option>`).join('');
+load();render();
+</script>
+</body>
+  </html>
+  
